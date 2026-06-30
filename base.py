@@ -188,7 +188,7 @@ async def home():
         <a href="https://github.com/maybeninja" target="_blank">maybeninja</a>
         &nbsp;|&nbsp;
         Discord:
-        <code>ninja.code</code>
+         <a href="https://discord.com/users/1364687618964459570" target="_blank">ninja.code</a>
     </div>
 </div>
 
