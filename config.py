@@ -13,5 +13,3 @@ ZiniPayAPIKey = config.get("ZiniPayAPIKey", "")
 DiscordWebhookUrl = config.get("DiscordWebhookUrl", "")
 
 BaseURL = config.get("BaseURL", "")
-
-Subdomain = config.get("Subdomain", "")
