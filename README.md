@@ -1,53 +1,76 @@
-# Komerza × RupantorPay Integration
+AutoBuyX × ZiniPay Integration
 
-A lightweight FastAPI integration that connects **Komerza Custom Payments** with **RupantorPay** for automatic payment verification and order delivery.
+A lightweight FastAPI integration that connects SellAuth with ZiniPay, allowing SellAuth invoices to be paid through ZiniPay and automatically processed after successful payment verification.
 
-## Features
+Requirements
 
-* Automatic RupantorPay checkout
-* Live EUR → BDT conversion
-* Payment verification
-* Automatic Komerza order delivery
-* Discord payment notifications
-* Payment session caching
+* Python 3.11+
+* FastAPI
+* Uvicorn
+* Requests
+* PyYAML
+* discord-webhook
+* pyfiglet
 
-## Requirements
+Install dependencies:
 
-* Python 3.10+
-* See `requirements.txt`
-
-## Setup
-
-1. Install dependencies:
-
-```bash
 pip install -r requirements.txt
-```
 
-2. Configure `settings.yml` with your:
+Configuration
 
-   * Komerza API Key
-   * Komerza Store ID
-   * RupantorPay API Key
-   * Base URL
-   * Discord Webhook URL
+Edit settings.yaml and fill in your credentials.
 
-3. Create a **Custom Payment Method** in your Komerza dashboard (e.g. **bKash** or **Nagad**).
+SellauthAPIKey: ""
+SellauthShopID: ""
+ZiniPayAPIKey: ""
+DiscordWebhookUrl: ""
+BaseURL: "https://payments.example.com"
 
-4. Set the **Redirect URL** to:
+Running
 
-```text
-{BASE_URL}/store/pay?orderid={id}
-```
+Start the API with:
 
-5. Start the server:
-
-```bash
 uvicorn base:app --host 0.0.0.0 --port 8000
-```
 
-> Make sure your `BASE_URL` is publicly accessible (e.g. via a domain or ngrok) so RupantorPay can reach the webhook.
+Payment Link
 
----
+Open the following URL to create a payment:
 
-If you find this project useful, please consider ⭐ starring the repository!
+https://payments.example.com/store/pay?orderid=SELLAUTH_INVOICE_ID
+
+The API will:
+
+* Fetch the SellAuth invoice
+* Create a ZiniPay invoice
+* Redirect the customer to the payment page
+
+Redirect URL Example
+
+Your payment gateway should redirect back to something like:
+
+https://payments.example.com/checkout/SELLAUTH_UNIQUE_ID
+
+The integration will then redirect the customer to your storefront or checkout page.
+
+Webhook URL
+
+Configure the webhook in your payment request as:
+
+https://payments.example.com/webhook/SELLAUTH_INVOICE_ID/paid
+
+After payment, the API will:
+
+* Verify the payment with ZiniPay
+* Process the SellAuth invoice
+* Send a Discord notification
+
+Notes
+
+* Payments are cached locally in payment.json.
+* Duplicate webhook requests are ignored.
+* Every payment is verified before the SellAuth invoice is processed.
+* The payment gateway must use the same domain configured for your brand.
+
+⸻
+
+Developed by maybeninja
