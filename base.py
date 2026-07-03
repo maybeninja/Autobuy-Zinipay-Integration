@@ -1,23 +1,24 @@
-from fastapi import FastAPI, HTTPException, Request 
-from fastapi.responses import RedirectResponse , HTMLResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import RedirectResponse, HTMLResponse
 from discord_webhook import DiscordWebhook, DiscordEmbed
 
-import requests 
+
+
+import requests
+from pyfiglet import Figlet
 
 from config import *
-from komerza import *
-from rupantor import *
+from sellauth import *
+from zinipay import *
 from payments import *
 
 app = FastAPI()
 
-from pyfiglet import Figlet
-
-PROJECT_NAME = "Konmerza x Rupantorpay Integration"
+PROJECT_NAME = "Autobuy x ZiniPay Integration"
 
 f = Figlet(font="standard")
 
-print("\033[95m")  # Purple
+print("\033[95m")
 print(f.renderText(PROJECT_NAME))
 print("\033[92mStatus   : ONLINE")
 print("\033[96mGitHub   : maybeninja")
@@ -25,7 +26,7 @@ print("Discord  : ninja.code")
 print("\033[0m")
 
 
-def eur_to_bdt(amount_eur: float) -> float:
+def eur_to_bdt(amount_eur: float):
     try:
         r = requests.get(
             "https://open.er-api.com/v6/latest/EUR",
@@ -47,10 +48,11 @@ def eur_to_bdt(amount_eur: float) -> float:
     except Exception:
         raise HTTPException(
             status_code=500,
-            detail="Unable to fetch EUR exchange rate.",
+            detail="Unable to fetch exchange rate.",
         )
 
 
+    
 def send_discord(
     orderid,
     txid,
@@ -58,7 +60,7 @@ def send_discord(
     payment_method,
 ):
     webhook = DiscordWebhook(
-        url=DiscordWebhookUrl
+        url=DiscordWebhookUrl,
     )
 
     embed = DiscordEmbed(
@@ -67,7 +69,7 @@ def send_discord(
     )
 
     embed.add_embed_field(
-        name="Order ID",
+        name="Invoice",
         value=orderid,
         inline=False,
     )
@@ -89,112 +91,103 @@ def send_discord(
         value=f"{amount} BDT",
         inline=True,
     )
-    embed.set_footer(text="Discord: `ninja.code`",icon_url="https://images-ext-1.discordapp.net/external/96UVSxbqz1NFia_04sK5bhsYgeW9TVqFX9g7bRS0xgU/%3Fsize%3D256/https/cdn.discordapp.com/avatars/1364687618964459570/a_73130e6fca7c9818acfa6a0541ee9844.gif")
-    
+
+    embed.set_footer(
+        text="Discord: ninja.code",
+        icon_url="https://cdn.discordapp.com/avatars/1364687618964459570/a_73130e6fca7c9818acfa6a0541ee9844.gif",
+    )
 
     webhook.add_embed(embed)
     webhook.execute()
-
-
+    
 @app.get("/", response_class=HTMLResponse)
 async def home():
     return f"""
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{PROJECT_NAME}</title>
 
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body {{
-            background: #0d1117;
-            color: #ffffff;
-            font-family: Arial, Helvetica, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }}
+<title>{PROJECT_NAME}</title>
 
-        .container {{
-            text-align: center;
-            padding: 20px;
-        }}
+<style>
 
-        h1 {{
-            font-size: 3rem;
-            margin-bottom: 18px;
-            font-weight: 700;
-        }}
+*{{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}}
 
-        .status {{
-            display: inline-block;
-            background: #238636;
-            color: #fff;
-            padding: 10px 24px;
-            border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 18px;
-        }}
+body{{
+background:#0d1117;
+color:#fff;
+font-family:Arial,Helvetica,sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}}
 
-        .meta {{
-            color: #8b949e;
-            font-size: 0.95rem;
-        }}
+.container{{
+text-align:center;
+}}
 
-        .meta a {{
-            color: #58a6ff;
-            text-decoration: none;
-        }}
+.status{{
+margin-top:20px;
+display:inline-block;
+padding:10px 24px;
+border-radius:8px;
+background:#238636;
+font-weight:bold;
+}}
 
-        .meta a:hover {{
-            text-decoration: underline;
-        }}
+.meta{{
+margin-top:20px;
+color:#8b949e;
+}}
 
-        @media (max-width: 768px) {{
-            h1 {{
-                font-size: 2rem;
-            }}
+.meta a{{
+color:#58a6ff;
+text-decoration:none;
+}}
 
-            .status {{
-                font-size: 1rem;
-            }}
+</style>
 
-            .meta {{
-                font-size: 0.85rem;
-            }}
-        }}
-    </style>
 </head>
+
 <body>
 
 <div class="container">
-    <h1>{PROJECT_NAME}</h1>
 
-    <div class="status">
-        ● STATUS: ONLINE
-    </div>
+<h1>{PROJECT_NAME}</h1>
 
-    <div class="meta">
-        GitHub:
-        <a href="https://github.com/maybeninja" target="_blank">maybeninja</a>
-        &nbsp;|&nbsp;
-        Discord:
-         <a href="https://discord.com/users/1364687618964459570" target="_blank">ninja.code</a>
-    </div>
+<div class="status">
+ONLINE
+</div>
+
+<div class="meta">
+
+<a href="https://github.com/maybeninja">
+GitHub
+</a>
+
+|
+
+<a href="https://discord.com/users/1364687618964459570">
+Discord
+</a>
+
+</div>
+
 </div>
 
 </body>
 </html>
 """
+
 
 @app.get("/store/pay")
 async def store_pay(orderid: str):
@@ -203,62 +196,88 @@ async def store_pay(orderid: str):
 
     if not result["success"]:
         raise HTTPException(
-            404,
-            result["error"],
+            status_code=404,
+            detail=result["error"],
         )
 
     order = result["order"]
 
     if is_delivered(order):
         raise HTTPException(
-            400,
-            "Order already delivered.",
+            status_code=400,
+            detail="Invoice already completed.",
         )
 
-    amount_eur = get_amount(order)
+    invoice_id = get_order_id(order)
+    unique_id = get_unique_id(order)
 
-    amount_bdt = eur_to_bdt(
-        amount_eur
-    )
+    amount = get_amount(order)
+    currency = get_currency(order)
+    email = get_email(order)
+
+    if currency.upper() == "EUR":
+        amount_bdt = eur_to_bdt(amount)
+    else:
+        amount_bdt = amount
 
     payment = create_payment(
-        orderid=orderid,
-        email=get_email(order),
-        amount_eur=amount_eur,
+        orderid=invoice_id,
+        unique_id=unique_id,
+        email=email,
+        amount_eur=amount,
         amount_bdt=amount_bdt,
     )
 
     if not payment["success"]:
         raise HTTPException(
-            500,
-            payment["error"],
+            status_code=500,
+            detail=payment["error"],
         )
 
     return RedirectResponse(
-        payment["payment_url"],
+        url=payment["payment_url"],
         status_code=302,
     )
     
-@app.post("/webhook/{orderid}/paid")
+@app.get("/webhook/{orderid}/paid")
 async def payment_webhook(
     orderid: str,
     request: Request,
 ):
-    form = await request.form()
+    #
+    # ZiniPay sends GET query parameters
+    #
 
-    transaction_id = form.get("transactionId")
-    payment_method = form.get("paymentMethod")
-    payment_amount = form.get("paymentAmount")
-    payment_fee = form.get("paymentFee")
-    webhook_status = form.get("status", "").upper()
+    query = request.query_params
 
-    if not transaction_id:
+    zini_invoice_id = (
+        query.get("invoice_id")
+        or query.get("invoiceId")
+    )
+
+    webhook_status = str(
+        query.get("status", "")
+    ).upper()
+
+    if not zini_invoice_id:
         raise HTTPException(
             status_code=400,
-            detail="Missing transaction ID.",
+            detail="Missing ZiniPay invoice ID.",
         )
 
-    payment = get_payment(orderid)
+    if webhook_status != "COMPLETED":
+        raise HTTPException(
+            status_code=400,
+            detail="Payment not completed.",
+        )
+
+    #
+    # Find local payment using ZiniPay invoice
+    #
+
+    payment = get_payment_from_zini_invoice(
+        zini_invoice_id
+    )
 
     if payment is None:
         raise HTTPException(
@@ -266,14 +285,27 @@ async def payment_webhook(
             detail="Payment session not found.",
         )
 
-    # Ignore duplicate webhooks
-    if payment_completed(orderid):
+    invoice_id = str(
+        payment["invoice_id"]
+    )
+
+    #
+    # Ignore duplicate webhook
+    #
+
+    if payment_completed(invoice_id):
         return {
             "success": True,
             "message": "Already processed."
         }
 
-    verify = verify_payment(transaction_id)
+    #
+    # Verify payment directly with ZiniPay
+    #
+
+    verify = verify_payment(
+        zini_invoice_id
+    )
 
     if not verify["success"]:
         raise HTTPException(
@@ -287,7 +319,11 @@ async def payment_webhook(
             detail=f"Payment status is {verify['status']}",
         )
 
-    result = get_order(orderid)
+    #
+    # Fetch SellAuth invoice
+    #
+
+    result = get_order(invoice_id)
 
     if not result["success"]:
         raise HTTPException(
@@ -297,22 +333,24 @@ async def payment_webhook(
 
     order = result["order"]
 
+    #
     # Security checks
+    #
 
-    if verify["fullname"] != orderid:
+    if verify["fullname"] != payment["unique_id"]:
         raise HTTPException(
             status_code=400,
-            detail="Order verification failed.",
+            detail="Unique ID mismatch.",
         )
 
     if verify["email"].lower() != get_email(order).lower():
         raise HTTPException(
             status_code=400,
-            detail="Email verification failed.",
+            detail="Email mismatch.",
         )
 
     expected_amount = round(
-        payment["amount_bdt"],
+        float(payment["amount_bdt"]),
         2,
     )
 
@@ -327,29 +365,44 @@ async def payment_webhook(
             detail="Amount mismatch.",
         )
 
+    #
+    # Save payment
+    #
+
     update_payment(
-        orderid,
+        invoice_id,
         transaction_id=verify["transaction_id"],
         payment_method=verify["payment_method"],
         status="COMPLETED",
         completed_at=int(__import__("time").time()),
     )
 
-    delivered = deliver_order(orderid)
+    #
+    # Deliver SellAuth order
+    #
 
-    if not delivered["success"]:
+    processed = deliver_order(
+        invoice_id
+    )
+
+    if not processed["success"]:
+
         update_payment(
-            orderid,
+            invoice_id,
             status="DELIVERY_FAILED",
         )
 
         raise HTTPException(
             status_code=500,
-            detail=delivered["error"],
+            detail=processed["error"],
         )
 
+    #
+    # Discord notification
+    #
+
     send_discord(
-        orderid=orderid,
+        orderid=payment["unique_id"],
         txid=verify["transaction_id"],
         amount=verify["amount"],
         payment_method=verify["payment_method"],
@@ -357,5 +410,80 @@ async def payment_webhook(
 
     return {
         "success": True,
-        "message": "Payment verified and order delivered."
+        "invoice_id": invoice_id,
+        "zini_invoice_id": zini_invoice_id,
+        "transaction_id": verify["transaction_id"],
+        "message": "Payment verified and invoice processed successfully."
     }
+    
+    
+@app.get("/cancel/{orderid}", response_class=HTMLResponse)
+async def payment_cancelled(orderid: str):
+    return f"""
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Payment Cancelled</title>
+
+<style>
+
+body{{
+background:#0d1117;
+color:#ffffff;
+font-family:Arial,Helvetica,sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}}
+
+.container{{
+text-align:center;
+padding:30px;
+}}
+
+h1{{
+font-size:2.5rem;
+margin-bottom:15px;
+color:#ff4d4d;
+}}
+
+p{{
+font-size:1.1rem;
+color:#b0b0b0;
+}}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>❌ Payment Cancelled</h1>
+
+<p>Your transaction has been cancelled.</p>
+
+<p>Invoice: <strong>{orderid}</strong></p>
+
+</div>
+
+</body>
+
+</html>
+"""
+
+
+@app.get("/checkout/{unique_id}")
+async def checkout_redirect(unique_id: str):
+    return RedirectResponse(
+        url=f"https://alzashop.online/checkout/{unique_id}",
+        status_code=302,
+    )
+    
