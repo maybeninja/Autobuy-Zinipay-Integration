@@ -1,4 +1,4 @@
-# AutoBuyX × ZiniPay Integration
+# AutoBuy × ZiniPay Integration
 
 A lightweight FastAPI integration that connects SellAuth with ZiniPay
 for automated payment processing.
