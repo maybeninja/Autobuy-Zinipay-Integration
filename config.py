@@ -5,8 +5,13 @@ SETTINGS_FILE = "settings.yaml"
 with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
     config = yaml.safe_load(f)
 
-KomerzaAPIKey = config.get("KomerzaAPIKey", "")
+SellauthAPIKey = config.get("SellauthAPIKey", "")
+SellauthShopID = config.get("SellauthShopID", "")
+
+ZiniPayAPIKey = config.get("ZiniPayAPIKey", "")
+
 DiscordWebhookUrl = config.get("DiscordWebhookUrl", "")
+
 BaseURL = config.get("BaseURL", "")
-KomerzaStoreID = config.get("KomerzaStoreID", "")
-RupantarPayAPIKey = config.get("RupantarPayAPIKey", "")
+
+Subdomain = config.get("Subdomain", "")
