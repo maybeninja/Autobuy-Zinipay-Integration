@@ -1,4 +1,6 @@
-KomerzaAPIKey: 
-KomerzaStoreID: 
-DiscordWebhookUrl:
-BaseURL:
+SellauthAPIKey: 
+DiscordWebhookUrl: 
+ZiniPayAPIKey: 
+Subdomain: 
+BaseURL: 
+SellauthShopID: 
