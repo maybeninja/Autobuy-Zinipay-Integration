@@ -11,10 +11,11 @@ def _ensure():
             json.dump(
                 {
                     "orders": {},
-                    "transactions": {}
+                    "transactions": {},
+                    "zinipay": {}
                 },
                 f,
-                indent=4
+                indent=4,
             )
 
 
@@ -23,11 +24,19 @@ def load():
 
     try:
         with open(PAYMENTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
+            data = json.load(f)
+
+        data.setdefault("orders", {})
+        data.setdefault("transactions", {})
+        data.setdefault("zinipay", {})
+
+        return data
+
     except Exception:
         return {
             "orders": {},
-            "transactions": {}
+            "transactions": {},
+            "zinipay": {}
         }
 
 
@@ -38,7 +47,7 @@ def save(data):
 
 def get_payment(orderid):
     data = load()
-    return data["orders"].get(orderid)
+    return data["orders"].get(str(orderid))
 
 
 def get_payment_from_transaction(transaction_id):
@@ -52,15 +61,43 @@ def get_payment_from_transaction(transaction_id):
     return data["orders"].get(orderid)
 
 
+def get_payment_from_unique_id(unique_id):
+    data = load()
+
+    for payment in data["orders"].values():
+        if payment.get("unique_id") == unique_id:
+            return payment
+
+    return None
+
+
+def get_payment_from_zini_invoice(invoice_id):
+    data = load()
+
+    orderid = data["zinipay"].get(invoice_id)
+
+    if not orderid:
+        return None
+
+    return data["orders"].get(orderid)
+
+
 def save_payment(
     orderid,
+    unique_id,
     payment_url,
     amount_eur,
-    amount_bdt
+    amount_bdt,
+    zini_invoice_id,
 ):
     data = load()
 
+    orderid = str(orderid)
+
     data["orders"][orderid] = {
+        "invoice_id": orderid,
+        "unique_id": unique_id,
+        "zini_invoice_id": zini_invoice_id,
         "payment_url": payment_url,
         "transaction_id": None,
         "payment_method": None,
@@ -68,14 +105,18 @@ def save_payment(
         "amount_eur": amount_eur,
         "amount_bdt": amount_bdt,
         "created_at": int(time.time()),
-        "completed_at": None
+        "completed_at": None,
     }
+
+    data["zinipay"][zini_invoice_id] = orderid
 
     save(data)
 
 
 def update_payment(orderid, **kwargs):
     data = load()
+
+    orderid = str(orderid)
 
     if orderid not in data["orders"]:
         return False
@@ -87,6 +128,11 @@ def update_payment(orderid, **kwargs):
     if transaction_id:
         data["transactions"][transaction_id] = orderid
 
+    zini_invoice_id = kwargs.get("zini_invoice_id")
+
+    if zini_invoice_id:
+        data["zinipay"][zini_invoice_id] = orderid
+
     save(data)
     return True
 
@@ -94,17 +140,26 @@ def update_payment(orderid, **kwargs):
 def delete_payment(orderid):
     data = load()
 
+    orderid = str(orderid)
+
     payment = data["orders"].get(orderid)
 
-    if payment:
-        transaction_id = payment.get("transaction_id")
+    if not payment:
+        return
 
-        if transaction_id:
-            data["transactions"].pop(transaction_id, None)
+    transaction_id = payment.get("transaction_id")
 
-        data["orders"].pop(orderid, None)
+    if transaction_id:
+        data["transactions"].pop(transaction_id, None)
 
-        save(data)
+    zini_invoice_id = payment.get("zini_invoice_id")
+
+    if zini_invoice_id:
+        data["zinipay"].pop(zini_invoice_id, None)
+
+    data["orders"].pop(orderid, None)
+
+    save(data)
 
 
 def payment_exists(orderid):
